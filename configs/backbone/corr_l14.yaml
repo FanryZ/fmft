@@ -1,0 +1,4 @@
+_target_: evals.models.corr_ft.CorrFT
+backbone_size: large
+rank: 4
+reg: False

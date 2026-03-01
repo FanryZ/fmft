@@ -1,0 +1,3 @@
+_target_: evals.models.dvt.Denoiser
+model_name: vitb14
+num_blocks: 1

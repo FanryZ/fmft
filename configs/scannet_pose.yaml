@@ -1,0 +1,9 @@
+random_seed: 8
+scale_factor: 0.25
+num_corr: 1000
+multilayer: False
+save_feats: False
+log_file: ./logs/scannet_pose.log
+defaults:
+  - backbone: dinov2_b14
+  - _self_

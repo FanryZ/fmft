@@ -1,0 +1,14 @@
+occlusion_accuracy           0.809073
+pts_within_1                 0.096132
+jaccard_1                    0.044912
+pts_within_2                 0.297446
+jaccard_2                    0.157730
+pts_within_4                 0.614248
+jaccard_4                    0.393318
+pts_within_8                 0.824654
+jaccard_8                    0.598448
+pts_within_16                0.913945
+jaccard_16                   0.696417
+average_jaccard              0.378165
+average_pts_within_thresh    0.549285
+dtype: float64

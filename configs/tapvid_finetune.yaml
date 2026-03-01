@@ -1,0 +1,16 @@
+random_seed: 8
+scale_factor: 0.25
+num_corr: 1000
+multilayer: False
+normalize: False
+
+neg_pair_num: 10
+iter_num: 100
+pair_num: -1
+weight_decay: 0.0
+temperature: 1.0
+select_idx: -1
+
+defaults:
+  - backbone: dinov2_b14
+  - _self_

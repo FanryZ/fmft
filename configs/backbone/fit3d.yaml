@@ -1,0 +1,2 @@
+_target_: evals.models.fit3d.FiT3D
+fit_type: dinov2_base

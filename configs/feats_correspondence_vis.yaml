@@ -1,0 +1,12 @@
+random_seed: 8
+scale_factor: 0.25
+num_corr: 1000
+multilayer: False
+save_feats: False
+log_file: ./logs/feats_correspondence_vis.log
+visualize: True
+vis_dir: ./feat_map_vis
+defaults:
+  - backbone: dinov2_b14
+  - dataset: navi
+  - _self_

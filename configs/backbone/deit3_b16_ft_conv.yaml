@@ -1,0 +1,7 @@
+_target_: evals.models.deit_ft_conv.DeIT
+model_size: base
+img_size: 384
+output: dense
+layer: -1
+mode: finetune
+conv_layer: /data/fanry/Desktop/fmft/probe3d/exp/scannet_finetune/conv_layer_0.pth

@@ -1,0 +1,9 @@
+random_seed: 8
+scale_factor: 0.25
+multilayer: False
+log_file: ./logs/onepose_pose.log
+
+# backbone: vits14
+defaults:
+  - backbone: dinov2_b14
+  

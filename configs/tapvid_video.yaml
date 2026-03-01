@@ -1,0 +1,7 @@
+random_seed: 8
+multilayer: False
+video_num: -1
+log_file: ./logs/tapvid_video.log
+defaults:
+  - backbone: dinov2_b14
+  

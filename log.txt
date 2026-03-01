@@ -1,0 +1,12 @@
+Scannet correspondence
+R@5pix, R@10pix, R@20pix, 15_rel_ang@10pix, 30_rel_ang@10pix, 60_rel_ang@10pix, 180_rel_ang@10pix 
+Scannet Pose Estimation 
+Mean_Ang, R@5deg, R@10deg, R@15deg, Mean_Trans
+NAVI correspondence
+R@0.01m, R@0.03m, R@0.05m, R@5pix, R@10pix, R@50pix, 30_rel_ang@10pix, 60_rel_ang@10pix, 90_rel_ang@10pix, 120_rel_ang@10pix 
+OnePose Pose Estimation
+threshold-1cm-1deg, threshold-3cm-3deg, threshold-5cm-5deg
+TAP-VID Video Tracking
+Occlusion Accuracy, pts_within_1, jaccard_1, pts_within_2, jaccard_2, pts_within_4, jaccard_4, pts_within_8, jaccard_8, pts_within_16, jaccard_16, average_jaccard, average_pts_within_thresh
+Pascal Semantic Transfer
+PCK@0.05, PCK@0.10, PCK@0.15, Weighted_PCK@0.05, Weighted_PCK@0.10, Weighted_PCK@0.15

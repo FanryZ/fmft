@@ -1,0 +1,7 @@
+_target_: evals.models.clip_ft_conv.CLIP
+arch: "ViT-B-16"
+checkpoint: "laion2b_s34b_b88k"
+output: dense
+layer: -1
+mode: finetune
+conv_layer: /data/fanry/Desktop/fmft/probe3d/exp/scannet_finetune/conv_layer_0.pth

@@ -1,0 +1,2 @@
+_target_: evals.datasets.nyuv2.NYUDataset
+split: /data/liyh/NYUv2/nyu_train.txt

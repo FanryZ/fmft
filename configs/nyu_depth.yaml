@@ -1,0 +1,12 @@
+random_seed: 8
+gpu_ids: [0]
+total_iters: 76800
+interval: 6400
+log_interval: 50
+multilayer: False
+log_level: INFO
+model_type: dinov2_vitb14
+output: dense
+defaults:
+  - backbone: dinov2_b14
+  - dataset: nyuv2
