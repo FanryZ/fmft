@@ -45,6 +45,41 @@ from evals.utils.transformations import so3_rotation_angle, transform_points_Rt
 from metric_learning import viz_feat
 
 
+def _tensor_to_bgr(img_chw: torch.Tensor):
+    img = img_chw.detach().cpu().permute(1, 2, 0).numpy()
+    img = np.clip(img * 255.0, 0, 255).astype(np.uint8)
+    return cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+
+def _save_match_vis(img0, img1, uv0, uv1, is_correct, save_path, max_draw=300):
+    im0 = _tensor_to_bgr(img0)
+    im1 = _tensor_to_bgr(img1)
+    h0, w0 = im0.shape[:2]
+    h1, w1 = im1.shape[:2]
+    canvas = np.zeros((max(h0, h1), w0 + w1, 3), dtype=np.uint8)
+    canvas[:h0, :w0] = im0
+    canvas[:h1, w0:w0+w1] = im1
+
+    uv0 = uv0.detach().cpu().numpy()
+    uv1 = uv1.detach().cpu().numpy()
+    corr = is_correct.detach().cpu().numpy().astype(bool)
+    n = len(uv0)
+    if n > max_draw:
+        idx = np.random.choice(n, max_draw, replace=False)
+        uv0, uv1, corr = uv0[idx], uv1[idx], corr[idx]
+
+    for p0, p1, ok in zip(uv0, uv1, corr):
+        color = (0, 255, 0) if ok else (0, 0, 255)
+        x0, y0 = int(round(p0[0])), int(round(p0[1]))
+        x1, y1 = int(round(p1[0])) + w0, int(round(p1[1]))
+        cv2.circle(canvas, (x0, y0), 2, color, -1, lineType=cv2.LINE_AA)
+        cv2.circle(canvas, (x1, y1), 2, color, -1, lineType=cv2.LINE_AA)
+        cv2.line(canvas, (x0, y0), (x1, y1), color, 1, lineType=cv2.LINE_AA)
+
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    cv2.imwrite(save_path, canvas)
+
+
 # @hydra.main("./configs", "scannet_correspondence", None)
 @hydra.main("./configs", "scannet_correspondence", None)
 def main(cfg: DictConfig):
@@ -103,6 +138,16 @@ def main(cfg: DictConfig):
         uv_0in1 = project_3dto2d(corr_xyz0in1, K_mat.clone())
         uv_1in1 = project_3dto2d(corr_xyz1, K_mat.clone())
         corr_err2d = (uv_0in1 - uv_1in1).norm(p=2, dim=1)
+
+        if cfg.visualize:
+            # correct: reprojection error <5px (green), wrong: red
+            correct_mask = corr_err2d < 5
+            match_dir = os.path.join(cfg.vis_dir, "matches")
+            _save_match_vis(
+                rgbs[0], rgbs[1], uv_0in1, uv_1in1, correct_mask,
+                os.path.join(match_dir, f"pair_{i:06d}.png")
+            )
+
         err_2d.append(corr_err2d.detach().cpu())
 
     err_2d = torch.stack(err_2d, dim=0).float()

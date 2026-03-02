@@ -26,6 +26,7 @@ from datetime import datetime
 import hydra
 import numpy as np
 import os
+import cv2
 import torch
 import torch.nn.functional as nn_F
 from hydra.utils import instantiate
@@ -40,6 +41,41 @@ from evals.utils.correspondence import (
 )
 from evals.utils.transformations import so3_rotation_angle, transform_points_Rt
 from metric_learning import viz_feat
+
+
+def _tensor_to_bgr(img_chw: torch.Tensor):
+    img = img_chw.detach().cpu().permute(1, 2, 0).numpy()
+    img = np.clip(img * 255.0, 0, 255).astype(np.uint8)
+    return cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+
+def _save_match_vis(img0, img1, uv0, uv1, is_correct, save_path, max_draw=300):
+    im0 = _tensor_to_bgr(img0)
+    im1 = _tensor_to_bgr(img1)
+    h0, w0 = im0.shape[:2]
+    h1, w1 = im1.shape[:2]
+    canvas = np.zeros((max(h0, h1), w0 + w1, 3), dtype=np.uint8)
+    canvas[:h0, :w0] = im0
+    canvas[:h1, w0:w0+w1] = im1
+
+    uv0 = uv0.detach().cpu().numpy()
+    uv1 = uv1.detach().cpu().numpy()
+    corr = is_correct.detach().cpu().numpy().astype(bool)
+    n = len(uv0)
+    if n > max_draw:
+        idx = np.random.choice(n, max_draw, replace=False)
+        uv0, uv1, corr = uv0[idx], uv1[idx], corr[idx]
+
+    for p0, p1, ok in zip(uv0, uv1, corr):
+        color = (0, 255, 0) if ok else (0, 0, 255)
+        x0, y0 = int(round(p0[0])), int(round(p0[1]))
+        x1, y1 = int(round(p1[0])) + w0, int(round(p1[1]))
+        cv2.circle(canvas, (x0, y0), 2, color, -1, lineType=cv2.LINE_AA)
+        cv2.circle(canvas, (x1, y1), 2, color, -1, lineType=cv2.LINE_AA)
+        cv2.line(canvas, (x0, y0), (x1, y1), color, 1, lineType=cv2.LINE_AA)
+
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    cv2.imwrite(save_path, canvas)
 
 
 @hydra.main("./configs", "navi_correspondence", None)
@@ -59,6 +95,8 @@ def main(cfg: DictConfig):
     xyz_grid_1 = []
     Rt_gt = []
     intrinsics = []
+    images_0 = []
+    images_1 = []
 
     for batch in tqdm(loader):
         feat_0 = model(batch["image_0"].cuda())
@@ -70,6 +108,8 @@ def main(cfg: DictConfig):
         feats_1.append(feat_1.detach().cpu())
         Rt_gt.append(batch["Rt_01"])
         intrinsics.append(batch["intrinsics_1"])
+        images_0.append(batch["image_0"].detach().cpu())
+        images_1.append(batch["image_1"].detach().cpu())
 
         if cfg.visualize:
             os.makedirs(cfg.vis_dir, exist_ok=True)
@@ -100,6 +140,8 @@ def main(cfg: DictConfig):
     xyz_grid_1 = torch.cat(xyz_grid_1, dim=0)
     Rt_gt = torch.cat(Rt_gt, dim=0).float()[:, :3, :4]
     intrinsics = torch.cat(intrinsics, dim=0).float()
+    images_0 = torch.cat(images_0, dim=0).float()
+    images_1 = torch.cat(images_1, dim=0).float()
 
     num_instances = len(loader.dataset)
     err_3d = []
@@ -118,6 +160,15 @@ def main(cfg: DictConfig):
         c_xyz1in1_uv = project_3dto2d(c_xyz1, intrinsics[i])
         c_xyz0in1_uv = project_3dto2d(c_xyz0in1, intrinsics[i])
         c_err2d = (c_xyz0in1_uv - c_xyz1in1_uv).norm(p=2, dim=1)
+
+        if cfg.visualize:
+            # correct: <2cm (green), wrong: red
+            correct_mask = c_err3d < 0.02
+            match_dir = os.path.join(cfg.vis_dir, "matches")
+            _save_match_vis(
+                images_0[i], images_1[i], c_uv0, c_uv1, correct_mask,
+                os.path.join(match_dir, f"pair_{i:06d}.png")
+            )
 
         err_3d.append(c_err3d.detach().cpu())
         err_2d.append(c_err2d.detach().cpu())
